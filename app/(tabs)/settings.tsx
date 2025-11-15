@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Switch, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import '@/global.css'; // Añadimos esta importación
+import '@/global.css'; // Importa global.css para aplicar estilos Tailwind
 
 export default function SettingsScreen() {
   const { theme, setTheme } = useTheme();
