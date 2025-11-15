@@ -1,19 +1,7 @@
-import { View, TouchableOpacity } from 'react-native';
-import { useTheme, Theme } from '@/lib/contexts/ThemeContext';
+import { THEME_OPTIONS } from '@/lib/constants/themes'; // ← CORREGIDO: quitado /contexts/
+import { useTheme } from '@/lib/contexts/ThemeContext';
+import { TouchableOpacity, View } from 'react-native';
 import ThemedText from './ThemedText';
-
-interface ThemeOption {
-  label: string;
-  value: Theme;
-  emoji: string;
-}
-
-const themeOptions: ThemeOption[] = [
-  { label: 'Claro', value: 'light', emoji: '☀️' },
-  { label: 'Oscuro', value: 'dark', emoji: '🌙' },
-  { label: 'Navidad Claro', value: 'christmas-light', emoji: '🎄' },
-  { label: 'Navidad Oscuro', value: 'christmas-dark', emoji: '🎅' },
-];
 
 export default function ThemeSelector() {
   const { theme, setTheme } = useTheme();
@@ -21,7 +9,7 @@ export default function ThemeSelector() {
 
   return (
     <View>
-      {themeOptions.map((option) => {
+      {THEME_OPTIONS.map((option) => {
         const isSelected = theme === option.value;
         
         return (

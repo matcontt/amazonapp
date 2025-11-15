@@ -1,7 +1,7 @@
-import { View, TouchableOpacity, TouchableOpacityProps } from 'react-native';
-import ThemedView from './ThemedView';
-import ThemedText from './ThemedText';
 import { useTheme } from '@/lib/contexts/ThemeContext';
+import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
+import ThemedText from './ThemedText';
+import ThemedView from './ThemedView';
 
 interface ProductCardProps extends Omit<TouchableOpacityProps, 'children'> {
   title: string;

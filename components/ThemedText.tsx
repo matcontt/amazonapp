@@ -1,5 +1,5 @@
-import { Text, TextProps } from 'react-native';
 import { useTheme } from '@/lib/contexts/ThemeContext';
+import { Text, TextProps } from 'react-native';
 
 interface ThemedTextProps extends TextProps {
   variant?: 'title' | 'subtitle' | 'body' | 'caption' | 'price';

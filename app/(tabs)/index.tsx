@@ -1,15 +1,15 @@
-import { ScrollView } from "react-native";
-import { useTheme } from '@/lib/contexts/ThemeContext';
-import ThemedView from '@/components/ThemedView';
-import ThemedText from '@/components/ThemedText';
 import ProductCard from '@/components/ProductCard';
+import SnowAnimation from '@/components/SnowAnimation';
+import ThemedText from '@/components/ThemedText';
+import ThemedView from '@/components/ThemedView';
 import '@/global.css';
+import { useTheme } from '@/lib/contexts/ThemeContext';
+import { ScrollView } from "react-native";
 
 export default function IndexScreen() {
   const { theme } = useTheme();
   const isChristmas = theme.includes('christmas');
 
-  // Datos de ejemplo (después vendrán de la API)
   const mockProducts = [
     { id: 1, title: 'Producto Premium', description: 'Descripción del producto', price: 29.99 },
     { id: 2, title: 'Oferta Especial', description: 'Descripción del producto', price: 59.99 },
@@ -18,10 +18,17 @@ export default function IndexScreen() {
 
   return (
     <ThemedView variant="screen" className="flex-1">
+      {/* Animación de nieve solo en temas navideños */}
+      <SnowAnimation enabled={isChristmas} />
+      
       <ScrollView>
-        {/* Header */}
         <ThemedView className="p-6 pt-16">
-          <ThemedText variant="title" color="primary" className="text-center">
+          <ThemedText 
+            variant="title" 
+            color="primary" 
+            className="text-center"
+            style={isChristmas ? { fontFamily: 'Pacifico_400Regular' } : {}}
+          >
             {isChristmas ? '🎄 Amazon Navidad 🎁' : 'Amazon App'}
           </ThemedText>
           
@@ -32,7 +39,6 @@ export default function IndexScreen() {
           )}
         </ThemedView>
 
-        {/* Card de bienvenida */}
         <ThemedView className="px-6">
           <ThemedView variant="section" className="p-6 rounded-2xl mb-4">
             <ThemedText variant="subtitle" className="mb-2">
@@ -45,7 +51,6 @@ export default function IndexScreen() {
             </ThemedText>
           </ThemedView>
 
-          {/* Sección de productos */}
           <ThemedText variant="subtitle" color="accent" className="mb-4">
             {isChristmas ? '🎁 Ofertas Navideñas' : 'Productos Destacados'}
           </ThemedText>
@@ -61,7 +66,6 @@ export default function IndexScreen() {
           ))}
         </ThemedView>
 
-        {/* Footer decorativo navideño */}
         {isChristmas && (
           <ThemedView className="items-center py-8">
             <ThemedText className="text-4xl">❄️ 🎅 ⛄ 🎄 ❄️</ThemedText>

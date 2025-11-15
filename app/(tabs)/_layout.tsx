@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
+import '@/global.css'; // Importa global.css para aplicar estilos Tailwind
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons'; // Importa íconos
-import '@/global.css'; // Importa global.css para aplicar estilos Tailwind
+import { Tabs } from "expo-router";
 
 export default function TabsLayout() {
   const { theme } = useTheme(); // Usamos theme, aunque aún no aplicamos estilos

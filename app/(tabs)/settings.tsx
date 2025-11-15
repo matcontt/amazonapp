@@ -1,9 +1,9 @@
-import { ScrollView } from 'react-native';
-import { useTheme } from '@/lib/contexts/ThemeContext';
-import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
+import ThemedView from '@/components/ThemedView';
 import ThemeSelector from '@/components/ThemeSelector';
 import '@/global.css';
+import { useTheme } from '@/lib/contexts/ThemeContext';
+import { ScrollView } from 'react-native';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
