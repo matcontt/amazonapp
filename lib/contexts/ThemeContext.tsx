@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Theme = 'light' | 'dark' | 'christmas-light' | 'christmas-dark';
+// Exporta el tipo Theme
+export type Theme = 'light' | 'dark' | 'christmas-light' | 'christmas-dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,7 +14,6 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>('light');
 
-  // Cargar tema persistido al montar
   useEffect(() => {
     const loadTheme = async () => {
       try {
@@ -26,7 +26,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     loadTheme();
   }, []);
 
-  // Guardar tema al cambiar
   const setTheme = async (newTheme: Theme) => {
     try {
       await AsyncStorage.setItem('theme', newTheme);
