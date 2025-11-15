@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Theme = 'light' | 'dark' | 'christmas-light' | 'christmas-dark';
 
@@ -10,7 +11,30 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>('light'); // Default light, cambiaremos a auto-navideño después
+  const [theme, setThemeState] = useState<Theme>('light');
+
+  // Cargar tema persistido al montar
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem('theme');
+        if (savedTheme) setThemeState(savedTheme as Theme);
+      } catch (error) {
+        console.log('Error loading theme:', error);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  // Guardar tema al cambiar
+  const setTheme = async (newTheme: Theme) => {
+    try {
+      await AsyncStorage.setItem('theme', newTheme);
+      setThemeState(newTheme);
+    } catch (error) {
+      console.log('Error saving theme:', error);
+    }
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
