@@ -1,5 +1,6 @@
 import '@/global.css';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
+import { ProductProvider } from '@/lib/contexts/ProductContext';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 import useFonts from '@/lib/hooks/useFonts';
 import { Stack } from "expo-router";
@@ -19,11 +20,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        />
+        <ProductProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          />
+        </ProductProvider>
       </AuthProvider>
     </ThemeProvider>
   );
