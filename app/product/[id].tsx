@@ -1,6 +1,7 @@
-import { ScrollView, View, Image, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Image, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useProducts } from '@/lib/contexts/ProductContext';
+import { useCart } from '@/lib/contexts/CartContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
@@ -12,11 +13,37 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getProductById } = useProducts();
+  const { addToCart, isInCart, getItemQuantity } = useCart();
   const { theme } = useTheme();
   const isChristmas = theme.includes('christmas');
   const isDark = theme.includes('dark');
 
   const product = getProductById(Number(id));
+  const inCart = product ? isInCart(product.id) : false;
+  const quantity = product ? getItemQuantity(product.id) : 0;
+
+  const handleAddToCart = async () => {
+    if (product) {
+      await addToCart(product);
+      Alert.alert(
+        '✅ Agregado al carrito',
+        `${product.title}\nCantidad: ${quantity + 1}`,
+        [
+          { text: 'Seguir Comprando' },
+          { text: 'Ir al Carrito', onPress: () => router.push('/(tabs)/cart') }
+        ]
+      );
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (product) {
+      if (!inCart) {
+        await addToCart(product);
+      }
+      router.push('/(tabs)/cart');
+    }
+  };
 
   if (!product) {
     return (
@@ -38,7 +65,6 @@ export default function ProductDetailScreen() {
       <SnowAnimation enabled={isChristmas} />
       
       <ScrollView>
-        {/* Header con botón volver */}
         <View className="flex-row items-center p-4 pt-16">
           <ThemedButton
             title="← Volver"
@@ -48,7 +74,6 @@ export default function ProductDetailScreen() {
           />
         </View>
 
-        {/* Imagen del producto */}
         <View className="items-center p-6">
           <View 
             className={`w-full h-64 rounded-2xl items-center justify-center ${
@@ -70,9 +95,7 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        {/* Información del producto */}
         <ThemedView className="px-6 pb-6">
-          {/* Categoría */}
           <View className="mb-3">
             <View 
               className={`self-start px-3 py-1 rounded-full ${
@@ -87,12 +110,10 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* Título */}
           <ThemedText variant="title" color="primary" className="mb-3">
             {product.title}
           </ThemedText>
 
-          {/* Rating */}
           <View className="flex-row items-center mb-4">
             <View className="flex-row items-center mr-4">
               <ThemedText className="text-yellow-500 text-xl mr-1">⭐</ThemedText>
@@ -105,7 +126,6 @@ export default function ProductDetailScreen() {
             </ThemedText>
           </View>
 
-          {/* Precio */}
           <ThemedView variant="section" className="p-4 rounded-xl mb-4">
             <View className="flex-row items-center justify-between">
               <View>
@@ -121,13 +141,19 @@ export default function ProductDetailScreen() {
                 </ThemedText>
               </View>
               
-              {isChristmas && (
-                <ThemedText className="text-4xl">🎁</ThemedText>
+              {inCart && (
+                <View className="items-center">
+                  <ThemedText variant="caption" color="secondary" className="mb-1">
+                    En carrito
+                  </ThemedText>
+                  <ThemedText variant="subtitle" color="accent">
+                    {quantity} {quantity === 1 ? 'unidad' : 'unidades'}
+                  </ThemedText>
+                </View>
               )}
             </View>
           </ThemedView>
 
-          {/* Descripción */}
           <ThemedView variant="card" className="p-4 rounded-xl mb-4">
             <ThemedText variant="subtitle" className="mb-3">
               📝 Descripción
@@ -137,17 +163,16 @@ export default function ProductDetailScreen() {
             </ThemedText>
           </ThemedView>
 
-          {/* Botones de acción */}
           <ThemedButton
-            title={isChristmas ? "🎁 Agregar al Carrito" : "Agregar al Carrito"}
-            onPress={() => console.log('Agregar al carrito:', product.id)}
+            title={inCart ? "➕ Agregar más al Carrito" : (isChristmas ? "🎁 Agregar al Carrito" : "Agregar al Carrito")}
+            onPress={handleAddToCart}
             className="mb-3"
           />
 
           <ThemedButton
             title="Comprar Ahora"
             variant="outline"
-            onPress={() => console.log('Comprar:', product.id)}
+            onPress={handleBuyNow}
           />
         </ThemedView>
       </ScrollView>
