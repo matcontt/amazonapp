@@ -1,12 +1,35 @@
-import ThemedText from '@/components/ThemedText';
-import ThemedView from '@/components/ThemedView';
-import ThemeSelector from '@/components/ThemeSelector';
-import '@/global.css';
+import { ScrollView, Alert } from 'react-native';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import { ScrollView } from 'react-native';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useRouter } from 'expo-router';
+import ThemedView from '@/components/ThemedView';
+import ThemedText from '@/components/ThemedText';
+import ThemeSelector from '@/components/ThemeSelector';
+import ThemedButton from '@/components/ThemedButton';
+import '@/global.css';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Cerrar Sesión', 
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/(auth)/login');
+          }
+        },
+      ]
+    );
+  };
 
   return (
     <ThemedView variant="screen" className="flex-1">
@@ -21,6 +44,18 @@ export default function SettingsScreen() {
             Personaliza tu experiencia
           </ThemedText>
 
+          {/* Usuario Info */}
+          {user && (
+            <ThemedView variant="section" className="p-4 rounded-2xl mb-4">
+              <ThemedText variant="subtitle" className="mb-2">
+                👤 {user.displayName || 'Usuario'}
+              </ThemedText>
+              <ThemedText variant="caption" color="secondary">
+                {user.email}
+              </ThemedText>
+            </ThemedView>
+          )}
+
           {/* Sección de Temas */}
           <ThemedView variant="card" className="rounded-2xl p-4 mb-4">
             <ThemedText variant="subtitle" className="mb-4">
@@ -31,7 +66,7 @@ export default function SettingsScreen() {
           </ThemedView>
 
           {/* Info del tema actual */}
-          <ThemedView variant="section" className="rounded-2xl p-4">
+          <ThemedView variant="section" className="rounded-2xl p-4 mb-4">
             <ThemedText variant="body" className="font-semibold mb-2">
               ℹ️ Tema Activo
             </ThemedText>
@@ -47,6 +82,14 @@ export default function SettingsScreen() {
               </ThemedView>
             )}
           </ThemedView>
+
+          {/* Logout Button */}
+          <ThemedButton
+            title="Cerrar Sesión"
+            variant="outline"
+            onPress={handleLogout}
+            icon="🚪"
+          />
 
           {/* Footer */}
           <ThemedView className="mt-8 items-center">
