@@ -9,12 +9,15 @@ export default function TabsLayout() {
   const { theme } = useTheme();
   const { cart } = useCart();
   const isDark = theme.includes('dark');
+  const isChristmas = theme.includes('christmas');
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: isDark ? '#FFD700' : '#FF0000',
+        tabBarActiveTintColor: isChristmas 
+          ? isDark ? '#FFD700' : '#FF0000'
+          : '#2563EB',
         tabBarInactiveTintColor: isDark ? '#9CA3AF' : '#6B7280',
         tabBarStyle: {
           backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
@@ -57,6 +60,15 @@ export default function TabsLayout() {
                 </View>
               )}
             </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ai-chat"
+        options={{
+          title: 'AI Chat',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
       />

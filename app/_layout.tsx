@@ -2,6 +2,7 @@ import '@/global.css';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { ProductProvider } from '@/lib/contexts/ProductContext';
 import { CartProvider } from '@/lib/contexts/CartContext';
+import { AIProvider } from '@/lib/contexts/AIContext';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 import useFonts from '@/lib/hooks/useFonts';
 import { Stack } from "expo-router";
@@ -23,21 +24,23 @@ export default function RootLayout() {
       <AuthProvider>
         <ProductProvider>
           <CartProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen 
-                name="product/[id]" 
-                options={{
-                  presentation: 'card',
-                  animation: 'slide_from_right',
+            <AIProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
                 }}
-              />
-            </Stack>
+              >
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen 
+                  name="product/[id]" 
+                  options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                  }}
+                />
+              </Stack>
+            </AIProvider>
           </CartProvider>
         </ProductProvider>
       </AuthProvider>

@@ -1,19 +1,32 @@
 import { ScrollView, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { useCart } from '@/lib/contexts/CartContext';
+import { useProducts } from '@/lib/contexts/ProductContext';
+import { useAI } from '@/lib/contexts/AIContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import ThemedButton from '@/components/ThemedButton';
 import CartItemCard from '@/components/CartItemCard';
+import AIRecommendations from '@/components/AIRecommendations';
 import SnowAnimation from '@/components/SnowAnimation';
 import '@/global.css';
 
 export default function CartScreen() {
   const router = useRouter();
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { products } = useProducts();
+  const { getRecommendations } = useAI();
   const { theme } = useTheme();
   const isChristmas = theme.includes('christmas');
+
+  // Obtener recomendaciones cuando hay items en el carrito
+  useEffect(() => {
+    if (cart.items.length > 0 && products.length > 0) {
+      getRecommendations(cart.items, products);
+    }
+  }, [cart.items.length, products.length]);
 
   const handleCheckout = () => {
     Alert.alert(
@@ -52,7 +65,6 @@ export default function CartScreen() {
       <SnowAnimation enabled={isChristmas} />
 
       <ScrollView>
-        {/* Header */}
         <ThemedView className="p-6 pt-16">
           <ThemedText 
             variant="title" 
@@ -72,7 +84,6 @@ export default function CartScreen() {
 
         <ThemedView className="px-6">
           {cart.items.length === 0 ? (
-            // Carrito vacío
             <ThemedView variant="section" className="p-8 rounded-2xl items-center">
               <ThemedText className="text-6xl mb-4">🛒</ThemedText>
               <ThemedText variant="subtitle" className="mb-2 text-center">
@@ -88,7 +99,6 @@ export default function CartScreen() {
             </ThemedView>
           ) : (
             <>
-              {/* Lista de productos */}
               <View className="mb-4">
                 {cart.items.map((item) => (
                   <CartItemCard
@@ -101,7 +111,9 @@ export default function CartScreen() {
                 ))}
               </View>
 
-              {/* Resumen */}
+              {/* Recomendaciones AI */}
+              <AIRecommendations />
+
               <ThemedView variant="section" className="p-6 rounded-2xl mb-4">
                 <View className="flex-row justify-between items-center mb-4">
                   <ThemedText variant="body" color="secondary">
@@ -137,7 +149,6 @@ export default function CartScreen() {
                 </View>
               </ThemedView>
 
-              {/* Botones */}
               <ThemedButton
                 title={isChristmas ? "🎁 Finalizar Compra" : "Finalizar Compra"}
                 onPress={handleCheckout}
