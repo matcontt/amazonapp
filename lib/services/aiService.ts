@@ -1,4 +1,4 @@
-import { getGeminiModel } from '@/lib/config/gemini';
+import { getGeminiModel, isGeminiEnabled } from '@/lib/config/gemini';
 import { Product } from '@/lib/types/product';
 import { CartItem } from '@/lib/types/cart';
 
@@ -9,12 +9,27 @@ export const aiService = {
     allProducts: Product[]
   ): Promise<Product[]> => {
     try {
-      if (cartItems.length === 0 || allProducts.length === 0) {
-        return [];
+      if (!isGeminiEnabled()) {
+        console.log('🤖 AI deshabilitada, usando recomendaciones básicas');
+        // Fallback: recomendar productos aleatorios de la misma categoría
+        const categories = [...new Set(cartItems.map(item => {
+          const product = allProducts.find(p => p.id === item.productId);
+          return product?.category;
+        }))].filter(Boolean);
+        
+        const recommendations = allProducts
+          .filter(p => 
+            categories.includes(p.category) && 
+            !cartItems.some(item => item.productId === p.id)
+          )
+          .slice(0, 3);
+        
+        return recommendations;
       }
 
       const model = getGeminiModel();
-      
+      if (!model) return [];
+
       const cartSummary = cartItems.map(item => item.title).join(', ');
       const productsList = allProducts
         .map(p => `${p.id}: ${p.title} (${p.category})`)
@@ -39,13 +54,11 @@ Ejemplo de respuesta: 5,12,18
       
       console.log('🤖 Respuesta de Gemini:', text);
 
-      // Parsear IDs
       const recommendedIds = text
         .split(',')
         .map(id => parseInt(id.trim()))
         .filter(id => !isNaN(id) && !cartItems.some(item => item.productId === id));
 
-      // Retornar productos recomendados
       const recommendations = allProducts.filter(p => recommendedIds.includes(p.id));
       console.log(`✅ ${recommendations.length} recomendaciones generadas`);
       
@@ -66,8 +79,19 @@ Ejemplo de respuesta: 5,12,18
         return products;
       }
 
+      if (!isGeminiEnabled()) {
+        // Fallback: búsqueda básica por texto
+        const lowerQuery = query.toLowerCase();
+        return products.filter(p => 
+          p.title.toLowerCase().includes(lowerQuery) ||
+          p.description.toLowerCase().includes(lowerQuery) ||
+          p.category.toLowerCase().includes(lowerQuery)
+        );
+      }
+
       const model = getGeminiModel();
-      
+      if (!model) return [];
+
       const productsList = products
         .map(p => `${p.id}: ${p.title} - ${p.description.substring(0, 100)}`)
         .join('\n');
@@ -111,8 +135,15 @@ Ejemplo: 1,5,8,12
     products: Product[]
   ): Promise<string> => {
     try {
+      if (!isGeminiEnabled()) {
+        return '🤖 Lo siento, el asistente AI no está disponible en este momento. Por favor, navega por nuestros productos o usa la búsqueda manual.';
+      }
+
       const model = getGeminiModel();
-      
+      if (!model) {
+        return '🤖 Asistente AI no disponible temporalmente.';
+      }
+
       const productsSummary = products.slice(0, 20)
         .map(p => `- ${p.title}: $${p.price} (${p.category})`)
         .join('\n');
@@ -144,8 +175,15 @@ Máximo 3 oraciones.
   // Generar descripción de regalo navideño
   generateGiftSuggestion: async (product: Product): Promise<string> => {
     try {
+      if (!isGeminiEnabled()) {
+        return '🎁 ¡Perfecto para regalar esta Navidad!';
+      }
+
       const model = getGeminiModel();
-      
+      if (!model) {
+        return '🎁 ¡Perfecto para regalar esta Navidad!';
+      }
+
       const prompt = `
 Crea una descripción corta y atractiva de por qué este producto sería un buen regalo navideño:
 Producto: ${product.title}

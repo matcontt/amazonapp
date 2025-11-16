@@ -1,3 +1,6 @@
+// ============================================
+// lib/contexts/AuthContext.tsx (FIX LOADING)
+// ============================================
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -31,15 +34,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loadUser = async () => {
     try {
+      console.log('🔐 Cargando sesión...');
       const savedUser = await AsyncStorage.getItem('currentUser');
       if (savedUser) {
-        setUser(JSON.parse(savedUser));
-        console.log('✅ Usuario cargado:', JSON.parse(savedUser).email);
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        console.log('✅ Sesión encontrada:', userData.email);
+      } else {
+        console.log('ℹ️ No hay sesión guardada');
       }
     } catch (err) {
       console.error('Error cargando usuario:', err);
     } finally {
+      // IMPORTANTE: Siempre setear loading a false
       setLoading(false);
+      console.log('✅ AuthContext inicializado');
     }
   };
 
@@ -49,31 +58,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      // Obtener usuarios registrados
       const usersData = await AsyncStorage.getItem('registeredUsers');
       const users: Array<{ email: string; password: string; name: string }> = 
         usersData ? JSON.parse(usersData) : [];
 
       console.log(`📊 Total de usuarios registrados: ${users.length}`);
 
-      // Buscar usuario por email
       const foundUser = users.find(u => u.email === email);
 
       if (!foundUser) {
-        // Usuario no existe
         const errorMsg = '❌ Este email no está registrado. Por favor, regístrate primero.';
         console.log(errorMsg);
         throw new Error(errorMsg);
       }
 
-      // Usuario existe, verificar contraseña
       if (foundUser.password !== password) {
         const errorMsg = '❌ Contraseña incorrecta. Intenta de nuevo.';
         console.log(errorMsg);
         throw new Error(errorMsg);
       }
 
-      // Login exitoso
       const loggedUser: User = {
         uid: Date.now().toString(),
         email: foundUser.email,
@@ -99,23 +103,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      // Obtener usuarios existentes
       const usersData = await AsyncStorage.getItem('registeredUsers');
       const users: Array<{ email: string; password: string; name: string }> = 
         usersData ? JSON.parse(usersData) : [];
 
-      // Verificar si el email ya existe
       if (users.some(u => u.email === email)) {
         const errorMsg = '❌ Este email ya está registrado. Por favor, inicia sesión.';
         console.log(errorMsg);
         throw new Error(errorMsg);
       }
 
-      // Agregar nuevo usuario
       users.push({ email, password, name });
       await AsyncStorage.setItem('registeredUsers', JSON.stringify(users));
 
-      // Crear sesión automática
       const newUser: User = {
         uid: Date.now().toString(),
         email,
@@ -166,3 +166,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
