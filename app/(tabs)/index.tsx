@@ -1,4 +1,5 @@
-import { ScrollView, View, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { ScrollView, View, RefreshControl, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useProducts } from '@/lib/contexts/ProductContext';
 import ThemedView from '@/components/ThemedView';
@@ -10,6 +11,7 @@ import SnowAnimation from '@/components/SnowAnimation';
 import '@/global.css';
 
 export default function IndexScreen() {
+  const router = useRouter();
   const { theme } = useTheme();
   const { 
     filteredProducts, 
@@ -24,6 +26,10 @@ export default function IndexScreen() {
   } = useProducts();
   
   const isChristmas = theme.includes('christmas');
+
+  const handleProductPress = (productId: number) => {
+    router.push(`/product/${productId}`);
+  };
 
   if (loading && filteredProducts.length === 0) {
     return (
@@ -132,7 +138,7 @@ export default function IndexScreen() {
                 imageUrl={product.image}
                 rating={product.rating.rate}
                 ratingCount={product.rating.count}
-                onPress={() => console.log('Producto presionado:', product.id)}
+                onPress={() => handleProductPress(product.id)}
               />
             ))
           )}

@@ -25,7 +25,17 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
             }}
-          />
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen 
+              name="product/[id]" 
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
+              }}
+            />
+          </Stack>
         </ProductProvider>
       </AuthProvider>
     </ThemeProvider>
