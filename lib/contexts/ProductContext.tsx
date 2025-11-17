@@ -31,19 +31,21 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     loadInitialData();
   }, []);
 
-  const loadInitialData = async () => {
+  const loadInitialData = async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
 
       const [productsData, categoriesData] = await Promise.all([
-        productService.getAllProducts(),
+        productService.getAllProducts(forceRefresh),
         productService.getCategories(),
       ]);
 
       setProducts(productsData);
       setCategories(categoriesData);
-      console.log('✅ Datos iniciales cargados');
+      
+      const discountCount = productsData.filter(p => p.discount).length;
+      console.log(`✅ Datos iniciales cargados: ${productsData.length} productos (${discountCount} con descuento)`);
     } catch (err: any) {
       console.error('❌ Error cargando datos:', err);
       setError('Error al cargar productos. Por favor, intenta de nuevo.');
@@ -53,7 +55,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshProducts = async () => {
-    await loadInitialData();
+    await loadInitialData(true); // Forzar refresh (ignorar cache)
   };
 
   const getProductById = (id: number): Product | undefined => {
@@ -62,6 +64,17 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   // Filtrar productos según categoría y búsqueda
   const filteredProducts = products.filter(product => {
+    // Filtro especial para categoría "Ofertas"
+    if (selectedCategory === '🔥 Ofertas') {
+      const hasDiscount = !!product.discount;
+      const matchesSearch = !searchQuery || 
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return hasDiscount && matchesSearch;
+    }
+    
+    // Filtro normal por categoría
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
     const matchesSearch = !searchQuery || 
       product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,3 +111,4 @@ export const useProducts = () => {
   }
   return context;
 };
+

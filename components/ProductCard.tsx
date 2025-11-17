@@ -1,3 +1,6 @@
+// ============================================
+// components/ProductCard.tsx (CORREGIDO - Props completos)
+// ============================================
 import { View, TouchableOpacity, TouchableOpacityProps, Image } from 'react-native';
 import ThemedView from './ThemedView';
 import ThemedText from './ThemedText';
@@ -10,6 +13,8 @@ interface ProductCardProps extends Omit<TouchableOpacityProps, 'children'> {
   imageUrl?: string;
   rating?: number;
   ratingCount?: number;
+  discount?: number; // ✅ AGREGADO
+  originalPrice?: number; // ✅ AGREGADO
 }
 
 export default function ProductCard({ 
@@ -19,6 +24,8 @@ export default function ProductCard({
   imageUrl,
   rating,
   ratingCount,
+  discount, // ✅ DESESTRUCTURADO
+  originalPrice, // ✅ DESESTRUCTURADO
   ...props 
 }: ProductCardProps) {
   const { theme } = useTheme();
@@ -27,7 +34,22 @@ export default function ProductCard({
 
   return (
     <TouchableOpacity {...props}>
-      <ThemedView variant="card" className="p-4 rounded-xl mb-3">
+      <ThemedView variant="card" className="p-4 rounded-xl mb-3 relative">
+        {/* Badge de descuento */}
+        {discount && (
+          <View 
+            className={`absolute top-2 right-2 px-2 py-1 rounded-full z-10 ${
+              isChristmas 
+                ? 'bg-navy-red' 
+                : 'bg-red-500'
+            }`}
+          >
+            <ThemedText className="text-white text-xs font-bold">
+              -{discount}%
+            </ThemedText>
+          </View>
+        )}
+
         <View className="flex-row items-center">
           {/* Imagen del producto */}
           <View 
@@ -62,9 +84,27 @@ export default function ProductCard({
             )}
             
             <View className="flex-row items-center mt-2">
-              <ThemedText variant="price" color="accent">
-                ${price.toFixed(2)}
-              </ThemedText>
+              {/* Precio con descuento */}
+              <View className="flex-row items-center">
+                {discount && originalPrice ? (
+                  <View className="flex-row items-center">
+                    <ThemedText 
+                      variant="caption" 
+                      color="secondary"
+                      className="line-through mr-2"
+                    >
+                      ${originalPrice.toFixed(2)}
+                    </ThemedText>
+                    <ThemedText variant="price" className="text-red-500">
+                      ${price.toFixed(2)}
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <ThemedText variant="price" color="accent">
+                    ${price.toFixed(2)}
+                  </ThemedText>
+                )}
+              </View>
               
               {rating && (
                 <View className="flex-row items-center ml-3">

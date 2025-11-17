@@ -12,6 +12,30 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   ]);
 };
 
+// Helper para formatear productos con información relevante
+const formatProductsForAI = (products: Product[]): string => {
+  return products.map(p => {
+    const discountInfo = p.discount 
+      ? `🔥 DESCUENTO ${p.discount}% (antes $${p.originalPrice})` 
+      : 'Sin descuento';
+    
+    return `ID: ${p.id}
+Título: ${p.title}
+Precio: $${p.price}
+Categoría: ${p.category}
+Rating: ⭐${p.rating.rate}/5 (${p.rating.count} reviews)
+${discountInfo}`;
+  }).join('\n\n');
+};
+
+// Helper para formatear historial de chat
+const formatChatHistory = (messages: Array<{ text: string; isUser: boolean }>): string => {
+  return messages
+    .slice(-10) // Solo últimos 10 mensajes para no saturar el contexto
+    .map(msg => `${msg.isUser ? 'Usuario' : 'Asistente'}: ${msg.text}`)
+    .join('\n');
+};
+
 export const aiService = {
   getCartRecommendations: async (
     cartItems: CartItem[],
@@ -25,16 +49,8 @@ export const aiService = {
 
       if (!isGeminiEnabled()) {
         console.log('ℹ️ [AI] Usando recomendaciones básicas (Gemini deshabilitado)');
-        const categories = [...new Set(cartItems.map(item => {
-          const product = allProducts.find(p => p.id === item.productId);
-          return product?.category;
-        }))].filter(Boolean) as string[];
-        
         return allProducts
-          .filter(p => 
-            categories.includes(p.category) && 
-            !cartItems.some(item => item.productId === p.id)
-          )
+          .filter(p => !cartItems.some(item => item.productId === p.id))
           .sort(() => Math.random() - 0.5)
           .slice(0, 3);
       }
@@ -45,27 +61,38 @@ export const aiService = {
         return [];
       }
 
-      const cartSummary = cartItems.map(item => item.title).join(', ');
-      const productsList = allProducts
-        .map(p => `${p.id}: ${p.title} (${p.category})`)
-        .join('\n');
+      const cartSummary = cartItems.map(item => {
+        const product = allProducts.find(p => p.id === item.productId);
+        return `- ${item.title} ($${item.price}) x${item.quantity}${
+          product?.discount ? ` [${product.discount}% OFF]` : ''
+        }`;
+      }).join('\n');
 
-      const prompt = `Eres un asistente de compras. El usuario tiene en su carrito: ${cartSummary}
+      const productsInfo = formatProductsForAI(allProducts.slice(0, 20));
 
-Productos disponibles:
-${productsList}
+      const prompt = `Eres un experto en recomendaciones de productos. Analiza el carrito del usuario y recomienda 3 productos complementarios.
 
-Recomienda 3 IDs de productos complementarios. Responde SOLO los IDs separados por comas.
-Ejemplo: 5,12,18`;
+CARRITO ACTUAL:
+${cartSummary}
 
-      console.log('🤖 [AI] Solicitando recomendaciones a Gemini...');
+PRODUCTOS DISPONIBLES:
+${productsInfo}
+
+INSTRUCCIONES:
+1. Recomienda productos que complementen lo que ya tiene en el carrito
+2. Prioriza productos con descuento cuando sea relevante
+3. Considera diferentes categorías para diversificar
+4. NO recomiendes productos que ya estén en el carrito
+
+Responde SOLO con los IDs separados por comas (ejemplo: 5,12,18)`;
+
+      console.log('🤖 [AI] Solicitando recomendaciones con contexto completo...');
       
-      // Timeout de 10 segundos
-      const result = await withTimeout(model.generateContent(prompt), 10000);
+      const result = await withTimeout(model.generateContent(prompt), 12000);
       const response = await result.response;
       const text = response.text().trim();
       
-      console.log('🤖 [AI] Respuesta recibida:', text.substring(0, 50));
+      console.log('🤖 [AI] Respuesta recibida:', text);
 
       const recommendedIds = text
         .split(',')
@@ -79,8 +106,6 @@ Ejemplo: 5,12,18`;
     } catch (error: any) {
       console.error('❌ [AI] Error en recomendaciones:', error.message);
       
-      // Fallback: productos aleatorios
-      console.log('ℹ️ [AI] Usando fallback: productos aleatorios');
       return allProducts
         .filter(p => !cartItems.some(item => item.productId === p.id))
         .sort(() => Math.random() - 0.5)
@@ -97,7 +122,6 @@ Ejemplo: 5,12,18`;
         return products;
       }
 
-      // Siempre usar búsqueda básica primero (más rápido y confiable)
       const lowerQuery = query.toLowerCase();
       const basicResults = products.filter(p => 
         p.title.toLowerCase().includes(lowerQuery) ||
@@ -105,7 +129,7 @@ Ejemplo: 5,12,18`;
         p.category.toLowerCase().includes(lowerQuery)
       );
 
-      console.log(`🔍 [AI] Búsqueda básica encontró ${basicResults.length} resultados`);
+      console.log(`🔍 [AI] Búsqueda encontró ${basicResults.length} resultados`);
       return basicResults;
 
     } catch (error: any) {
@@ -114,7 +138,12 @@ Ejemplo: 5,12,18`;
     }
   },
 
-  chatWithAI: async (message: string, products: Product[]): Promise<string> => {
+  // NUEVO: Chat con memoria conversacional
+  chatWithAI: async (
+    message: string, 
+    products: Product[], 
+    chatHistory: Array<{ text: string; isUser: boolean }>
+  ): Promise<string> => {
     try {
       if (!isGeminiEnabled()) {
         return '🤖 El asistente AI no está disponible. Por favor, configura tu API Key de Gemini en el archivo .env\n\nObtén una gratis en: https://makersuite.google.com/app/apikey';
@@ -125,26 +154,45 @@ Ejemplo: 5,12,18`;
         return '🤖 Asistente AI temporalmente no disponible. Intenta de nuevo en unos momentos.';
       }
 
-      const productsSummary = products.slice(0, 15)
-        .map(p => `- ${p.title}: $${p.price}`)
-        .join('\n');
+      // Productos con descuento
+      const discountedProducts = products.filter(p => p.discount);
+      const discountInfo = discountedProducts.length > 0
+        ? `\n\n🔥 PRODUCTOS EN OFERTA (${discountedProducts.length}):\n` + 
+          discountedProducts.slice(0, 5).map(p => 
+            `- ${p.title}: $${p.price} (antes $${p.originalPrice}) - ${p.discount}% OFF`
+          ).join('\n')
+        : '';
 
-      const prompt = `Eres un asistente virtual amigable de Amazon App.
+      const productsInfo = formatProductsForAI(products.slice(0, 15));
+      const history = chatHistory.length > 0 
+        ? `\n\nCONVERSACIÓN PREVIA:\n${formatChatHistory(chatHistory)}\n`
+        : '';
 
-Productos disponibles:
-${productsSummary}
+      const prompt = `Eres un asistente virtual amigable y experto de Amazon App. Tienes acceso al catálogo completo de productos y puedes responder sobre descuentos, categorías, precios, y hacer recomendaciones personalizadas.
+
+CATÁLOGO DE PRODUCTOS:
+${productsInfo}${discountInfo}${history}
 
 Usuario: ${message}
 
-Responde de forma breve y útil (máximo 2-3 oraciones).`;
+INSTRUCCIONES:
+- Responde de forma concisa (máximo 3-4 oraciones)
+- Si preguntan por descuentos, menciona específicamente cuáles productos tienen oferta
+- Si preguntan por categorías, lista las disponibles
+- Si piden recomendaciones, sugiere productos relevantes con sus precios
+- Mantén el contexto de la conversación anterior
+- Usa emojis para hacer la conversación más amigable
 
-      console.log('💬 [AI] Enviando mensaje a Gemini...');
+Respuesta:`;
+
+      console.log('💬 [AI] Enviando mensaje con contexto completo y memoria...');
+      console.log(`📊 [AI] Historial: ${chatHistory.length} mensajes previos`);
       
-      const result = await withTimeout(model.generateContent(prompt), 10000);
+      const result = await withTimeout(model.generateContent(prompt), 15000);
       const response = await result.response;
       const text = response.text();
       
-      console.log('✅ [AI] Respuesta recibida');
+      console.log('✅ [AI] Respuesta generada con memoria');
       return text;
       
     } catch (error: any) {
@@ -161,7 +209,9 @@ Responde de forma breve y útil (máximo 2-3 oraciones).`;
   generateGiftSuggestion: async (product: Product): Promise<string> => {
     try {
       if (!isGeminiEnabled()) {
-        return '🎁 ¡Regalo perfecto para esta temporada!';
+        return product.discount 
+          ? `🎁 ¡Regalo perfecto con ${product.discount}% de descuento!`
+          : '🎁 ¡Regalo perfecto para esta temporada!';
       }
 
       const model = getGeminiModel();
@@ -169,12 +219,17 @@ Responde de forma breve y útil (máximo 2-3 oraciones).`;
         return '🎁 ¡Excelente opción para regalar!';
       }
 
+      const discountInfo = product.discount 
+        ? `Tiene ${product.discount}% de descuento (antes $${product.originalPrice})`
+        : 'Precio regular';
+
       const prompt = `Crea una descripción breve (1-2 oraciones) de por qué este producto es un buen regalo navideño:
 
 Producto: ${product.title}
 Precio: $${product.price}
+${discountInfo}
 
-Usa emojis navideños y sé entusiasta.`;
+Usa emojis navideños y sé entusiasta. Si tiene descuento, menciónalo.`;
 
       console.log('🎁 [AI] Generando sugerencia de regalo...');
       
@@ -186,7 +241,10 @@ Usa emojis navideños y sé entusiasta.`;
       
     } catch (error: any) {
       console.error('❌ [AI] Error generando sugerencia:', error.message);
-      return '🎁 ¡Perfecto para regalar en esta temporada festiva! 🎄';
+      return product.discount
+        ? `🎁 ¡Aprovecha ${product.discount}% OFF en este regalo perfecto! 🎄`
+        : '🎁 ¡Perfecto para regalar en esta temporada festiva! 🎄';
     }
   },
 };
+

@@ -15,16 +15,25 @@ export default function CategoryChip({
   const { theme } = useTheme();
   const isDark = theme.includes('dark');
   const isChristmas = theme.includes('christmas');
+  
+  // Estilo especial para categoría "Ofertas"
+  const isOffers = label === '🔥 Ofertas';
 
   const bgColor = isSelected
-    ? isChristmas
-      ? isDark ? 'bg-navy-gold' : 'bg-navy-red'
-      : 'bg-blue-600'
-    : isDark
-      ? 'bg-gray-700'
-      : 'bg-gray-200';
+    ? isOffers
+      ? 'bg-red-500'  // Rojo brillante para Ofertas
+      : isChristmas
+        ? isDark ? 'bg-navy-gold' : 'bg-navy-red'
+        : 'bg-blue-600'
+    : isOffers
+      ? 'bg-red-100'  // Rojo suave cuando no está seleccionado
+      : isDark
+        ? 'bg-gray-700'
+        : 'bg-gray-200';
 
-  const textColor = isSelected ? 'text-white' : isDark ? 'text-white' : 'text-gray-900';
+  const textColor = isSelected || isOffers 
+    ? 'text-white' 
+    : isDark ? 'text-white' : 'text-gray-900';
 
   return (
     <TouchableOpacity

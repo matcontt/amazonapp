@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, ActivityIndicator } from 'react-native';
+import { ScrollView, View, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useProducts } from '@/lib/contexts/ProductContext';
@@ -20,12 +20,17 @@ export default function IndexScreen() {
     error, 
     selectedCategory, 
     searchQuery,
+    products,
     setSelectedCategory, 
     setSearchQuery,
     refreshProducts 
   } = useProducts();
   
   const isChristmas = theme.includes('christmas');
+
+  // Contar productos con descuento TOTALES (no solo filtrados)
+  const totalDiscountedCount = products.filter(p => p.discount).length;
+  const isShowingOffers = selectedCategory === '🔥 Ofertas';
 
   const handleProductPress = (productId: number) => {
     router.push(`/product/${productId}`);
@@ -85,6 +90,48 @@ export default function IndexScreen() {
               ¡Ofertas especiales de temporada!
             </ThemedText>
           )}
+
+          {/* Banner de ofertas prominente */}
+          {totalDiscountedCount > 0 && !isShowingOffers && (
+            <ThemedView 
+              className="mt-4 p-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 5,
+              }}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <ThemedText className="text-white text-lg font-bold">
+                    🔥 {totalDiscountedCount} Productos en Oferta
+                  </ThemedText>
+                  <ThemedText className="text-white text-sm mt-1">
+                    Hasta 50% de descuento
+                  </ThemedText>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setSelectedCategory('🔥 Ofertas')}
+                  className="bg-white px-4 py-2 rounded-full"
+                >
+                  <ThemedText className="text-red-500 font-bold">
+                    Ver Todas →
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </ThemedView>
+          )}
+
+          {/* Indicador cuando está viendo ofertas */}
+          {isShowingOffers && (
+            <ThemedView className="mt-4 p-3 rounded-lg bg-red-500">
+              <ThemedText className="text-white text-center font-bold">
+                🔥 Mostrando {filteredProducts.length} productos con descuento
+              </ThemedText>
+            </ThemedView>
+          )}
         </ThemedView>
 
         <ThemedView className="px-6">
@@ -118,14 +165,22 @@ export default function IndexScreen() {
 
           {/* Productos */}
           <ThemedText variant="subtitle" color="accent" className="mb-4">
-            {isChristmas ? '🎁 Ofertas Navideñas' : 'Productos Destacados'} 
-            {' '}({filteredProducts.length})
+            {isShowingOffers 
+              ? '🔥 Ofertas Especiales' 
+              : isChristmas ? '🎁 Ofertas Navideñas' : 'Productos Destacados'
+            } ({filteredProducts.length})
           </ThemedText>
 
           {filteredProducts.length === 0 ? (
             <ThemedView variant="section" className="p-6 rounded-2xl items-center">
+              <ThemedText className="text-6xl mb-4">
+                {isShowingOffers ? '🔥' : '📦'}
+              </ThemedText>
               <ThemedText variant="body" color="secondary" className="text-center">
-                No se encontraron productos {searchQuery && `con "${searchQuery}"`}
+                {isShowingOffers 
+                  ? 'No hay ofertas disponibles en este momento'
+                  : `No se encontraron productos ${searchQuery && `con "${searchQuery}"`}`
+                }
               </ThemedText>
             </ThemedView>
           ) : (
@@ -138,6 +193,8 @@ export default function IndexScreen() {
                 imageUrl={product.image}
                 rating={product.rating.rate}
                 ratingCount={product.rating.count}
+                discount={product.discount}
+                originalPrice={product.originalPrice}
                 onPress={() => handleProductPress(product.id)}
               />
             ))

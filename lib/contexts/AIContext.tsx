@@ -52,7 +52,15 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setLoadingChat(true);
-      const response = await aiService.chatWithAI(message, products);
+      
+      // CAMBIO IMPORTANTE: Pasar historial de mensajes al AI
+      const chatHistory = messages.map(msg => ({
+        text: msg.text,
+        isUser: msg.isUser,
+      }));
+      
+      console.log(`💬 [AI Context] Enviando mensaje con ${chatHistory.length} mensajes previos`);
+      const response = await aiService.chatWithAI(message, products, chatHistory);
       
       // Agregar respuesta del AI
       const aiMessage: Message = {
@@ -62,14 +70,26 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
+      
+      console.log(`✅ [AI Context] Nueva respuesta agregada. Total mensajes: ${messages.length + 2}`);
     } catch (error) {
       console.error('Error en chat:', error);
+      
+      // Agregar mensaje de error
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: '❌ Ocurrió un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoadingChat(false);
     }
   };
 
   const clearChat = () => {
+    console.log('🗑️ [AI Context] Limpiando chat');
     setMessages([]);
   };
 
