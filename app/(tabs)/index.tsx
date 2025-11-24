@@ -17,6 +17,7 @@ export default function IndexScreen() {
     filteredProducts, 
     categories, 
     loading, 
+    translating, // NUEVO
     error, 
     selectedCategory, 
     searchQuery,
@@ -28,7 +29,6 @@ export default function IndexScreen() {
   
   const isChristmas = theme.includes('christmas');
 
-  // Contar productos con descuento TOTALES (no solo filtrados)
   const totalDiscountedCount = products.filter(p => p.discount).length;
   const isShowingOffers = selectedCategory === '🔥 Ofertas';
 
@@ -89,6 +89,16 @@ export default function IndexScreen() {
             <ThemedText variant="body" color="secondary" className="text-center mt-2">
               ¡Ofertas especiales de temporada!
             </ThemedText>
+          )}
+
+          {/* Indicador de traducción activa */}
+          {translating && (
+            <ThemedView className="mt-3 p-3 rounded-lg bg-blue-500 flex-row items-center justify-center">
+              <ActivityIndicator size="small" color="white" />
+              <ThemedText className="text-white ml-2 font-semibold">
+                🌍 Traduciendo productos al español...
+              </ThemedText>
+            </ThemedView>
           )}
 
           {/* Banner de ofertas prominente */}

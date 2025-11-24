@@ -1,6 +1,7 @@
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert, Switch, View, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useProducts } from '@/lib/contexts/ProductContext';
 import { useRouter } from 'expo-router';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
@@ -11,7 +12,9 @@ import '@/global.css';
 export default function SettingsScreen() {
   const { theme } = useTheme();
   const { user, signOut } = useAuth();
+  const { translationsEnabled, translating, toggleTranslations, retranslate } = useProducts();
   const router = useRouter();
+  const isDark = theme.includes('dark');
 
   const handleLogout = () => {
     Alert.alert(
@@ -26,6 +29,20 @@ export default function SettingsScreen() {
             await signOut();
             router.replace('/(auth)/login');
           }
+        },
+      ]
+    );
+  };
+
+  const handleRetranslate = () => {
+    Alert.alert(
+      'Re-traducir Productos',
+      '¿Deseas volver a traducir todos los productos? Esto puede tardar unos segundos.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Re-traducir', 
+          onPress: retranslate
         },
       ]
     );
@@ -55,6 +72,47 @@ export default function SettingsScreen() {
               </ThemedText>
             </ThemedView>
           )}
+
+          {/* Sección de Traducciones */}
+          <ThemedView variant="card" className="rounded-2xl p-4 mb-4">
+            <ThemedText variant="subtitle" className="mb-4">
+              🌍 Idioma de Productos
+            </ThemedText>
+
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-1 mr-4">
+                <ThemedText variant="body" className="mb-1">
+                  Traducir al Español
+                </ThemedText>
+                <ThemedText variant="caption" color="secondary">
+                  Traduce títulos y descripciones automáticamente
+                </ThemedText>
+              </View>
+              <Switch
+                value={translationsEnabled}
+                onValueChange={toggleTranslations}
+                disabled={translating}
+              />
+            </View>
+
+            {translating && (
+              <View className="flex-row items-center py-2">
+                <ActivityIndicator size="small" />
+                <ThemedText variant="caption" color="secondary" className="ml-2">
+                  Traduciendo productos...
+                </ThemedText>
+              </View>
+            )}
+
+            {translationsEnabled && !translating && (
+              <ThemedButton
+                title="🔄 Re-traducir Todo"
+                variant="outline"
+                onPress={handleRetranslate}
+                className="mt-2"
+              />
+            )}
+          </ThemedView>
 
           {/* Sección de Temas */}
           <ThemedView variant="card" className="rounded-2xl p-4 mb-4">
