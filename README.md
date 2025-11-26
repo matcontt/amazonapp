@@ -16,8 +16,6 @@ La aplicación implementa un sistema completo de **autenticación** (Registro e 
 
 ## Demostración en Video
 
-https://github.com/user-attachments/assets/51e45903-a795-4845-957c-52f4851729ff
-
 https://youtube.com/shorts/GRkVnfK-teo?feature=share
 
 ## Características Principales
