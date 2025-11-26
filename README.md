@@ -1,53 +1,71 @@
-> Edited for use in IDX on 07/09/12
+# Zod Gemini Expo App
 
-# Welcome to your Expo app 👋
+¡Bienvenidos a mi proyecto final del primer trimestre!
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este es un proyecto desarrollado con **[Expo](https://expo.dev)** y creado mediante `create-expo-app`, para el módulo de **Programación Móvil** (Bachillerato – Área Informática – 3º Curso – Año Lectivo 2025-2026).
 
-## Get started
+La aplicación implementa un sistema completo de **autenticación** (Registro e Inicio de Sesión) utilizando:
+- Validación robusta con **Zod**
+- Estilos modernos con **Tailwind CSS** (via NativeWind)
+- Navegación con **Expo Router**
+- Buenas prácticas de UX en formularios móviles
 
-#### Android
+> **Editado y optimizado para correr en IDX** – 25/11/2025  
+> **Autor:** Mateo C.  
+> **Repositorio:** https://github.com/matcontt/amazonapp
 
-Android previews are defined as a `workspace.onStart` hook and started as a vscode task when the workspace is opened/started.
+## Demostración en Video
 
-Note, if you can't find the task, either:
-- Rebuild the environment (using command palette: `IDX: Rebuild Environment`), or
-- Run `npm run android -- --tunnel` command manually run android and see the output in your terminal. The device should pick up this new command and switch to start displaying the output from it.
+https://github.com/user-attachments/assets/51e45903-a795-4845-957c-52f4851729ff
 
-In the output of this command/task, you'll find options to open the app in a
+https://youtube.com/shorts/GRkVnfK-teo?feature=share
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Características Principales
 
-You'll also find options to open the app's developer menu, reload the app, and more.
+- Autenticación completa (Sign Up / Log In) con validación estricta mediante **Zod**
+- Simulación de tienda estilo Amazon con más de 20 productos reales
+- Carrito de compras funcional con persistencia local
+- Chatbot inteligente impulsado por **Google Gemini 1.5 Flash**  
+  → Detecta intención de compra y permite agregar productos al carrito con un solo toque
+- Temas dinámicos: Modo oscuro y tema navideño automático
+- Animaciones festivas (nieve cayendo en diciembre)
+- Experiencia de teclado perfecta en iOS y Android (`KeyboardAvoidingView` + scroll automático)
+- Diseño 100% responsive y moderno usando **Tailwind CSS / NativeWind**
+- Arquitectura limpia con Context API para estado global (productos, carrito, tema, AI)
 
-#### Web
+## Tecnologías Utilizadas
 
-Web previews will be started and managred automatically. Use the toolbar to manually refresh.
+| Tecnología             | Uso                                      |
+|------------------------|-------------------------------------------|
+| React Native + Expo    | Base de la aplicación móvil               |
+| TypeScript             | Tipado fuerte y seguridad                 |
+| Zod                    | Validación de formularios y datos         |
+| NativeWind (Tailwind)  | Estilos utility-first                     |
+| Expo Router            | Navegación tipo archivo                   |
+| Google Gemini API      | Chatbot con detección de intención de compra |
+| AsyncStorage           | Persistencia del carrito                  |
+| React Context          | Gestión global del estado                 |
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Requisitos Previos
 
-## Get a fresh project
+- Node.js 18 o superior
+- Expo CLI: `npm install -g expo-cli`
+- App Expo Go (iOS/Android) o emulador
+- (Opcional) Cuenta en [Google AI Studio](https://aistudio.google.com) para obtener tu **GEMINI_API_KEY**
 
-When you're ready, run:
+## Instalación y Ejecución
 
 ```bash
-npm run reset-project
-```
+# 1. Clonar el repositorio
+git clone https://github.com/matcontt/amazonapp.git
+cd amazonapp
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# 2. Instalar dependencias
+npm install
 
-## Learn more
+# 3. (Opcional pero recomendado) Agregar tu API Key de Gemini
+cp .env.example .env
+# Edita .env y pega tu GEMINI_API_KEY=
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# 4. Iniciar el proyecto
+npx expo start
