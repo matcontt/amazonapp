@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { aiService } from '@/lib/services/aiService';
+import { aiService, AIResponse, PurchaseIntent } from '@/lib/services/aiService';
 import { Product } from '@/lib/types/product';
 import { CartItem } from '@/lib/types/cart';
 
@@ -16,7 +16,7 @@ interface AIContextType {
   messages: Message[];
   loadingChat: boolean;
   getRecommendations: (cartItems: CartItem[], products: Product[]) => Promise<void>;
-  sendMessage: (message: string, products: Product[]) => Promise<void>;
+  sendMessage: (message: string, products: Product[]) => Promise<AIResponse | undefined>;
   clearChat: () => void;
 }
 
@@ -40,8 +40,7 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = async (message: string, products: Product[]) => {
-    // Agregar mensaje del usuario
+  const sendMessage = async (message: string, products: Product[]): Promise<AIResponse | undefined> => {
     const userMessage: Message = {
       id: Date.now().toString(),
       text: message,
@@ -53,7 +52,6 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoadingChat(true);
       
-      // CAMBIO IMPORTANTE: Pasar historial de mensajes al AI
       const chatHistory = messages.map(msg => ({
         text: msg.text,
         isUser: msg.isUser,
@@ -62,20 +60,20 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
       console.log(`💬 [AI Context] Enviando mensaje con ${chatHistory.length} mensajes previos`);
       const response = await aiService.chatWithAI(message, products, chatHistory);
       
-      // Agregar respuesta del AI
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response,
+        text: response.text,
         isUser: false,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
       
       console.log(`✅ [AI Context] Nueva respuesta agregada. Total mensajes: ${messages.length + 2}`);
+      
+      return response;
     } catch (error) {
       console.error('Error en chat:', error);
       
-      // Agregar mensaje de error
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: '❌ Ocurrió un error al procesar tu mensaje. Por favor, intenta de nuevo.',
@@ -83,6 +81,8 @@ export const AIProvider = ({ children }: { children: ReactNode }) => {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
+      
+      return undefined;
     } finally {
       setLoadingChat(false);
     }

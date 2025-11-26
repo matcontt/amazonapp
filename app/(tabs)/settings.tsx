@@ -1,4 +1,5 @@
 import { ScrollView, Alert, Switch, View, ActivityIndicator } from 'react-native';
+import { useRef } from 'react';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useProducts } from '@/lib/contexts/ProductContext';
@@ -15,6 +16,40 @@ export default function SettingsScreen() {
   const { translationsEnabled, translating, toggleTranslations, retranslate } = useProducts();
   const router = useRouter();
   const isDark = theme.includes('dark');
+  
+  // useRef para prevenir doble toggle
+  const isTogglingRef = useRef(false);
+
+  const handleToggle = () => {
+    if (isTogglingRef.current || translating) {
+      console.log('⏱️ Toggle ignorado (ya en proceso)');
+      return;
+    }
+    
+    isTogglingRef.current = true;
+    console.log('🔄 Toggle activado:', !translationsEnabled);
+    
+    toggleTranslations();
+    
+    // Reset después de 1 segundo
+    setTimeout(() => {
+      isTogglingRef.current = false;
+    }, 1000);
+  };
+
+  const handleRetranslate = () => {
+    Alert.alert(
+      'Re-traducir Productos',
+      '¿Deseas volver a traducir todos los productos? Esto puede tardar unos segundos.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Re-traducir', 
+          onPress: retranslate
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -34,23 +69,9 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleRetranslate = () => {
-    Alert.alert(
-      'Re-traducir Productos',
-      '¿Deseas volver a traducir todos los productos? Esto puede tardar unos segundos.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Re-traducir', 
-          onPress: retranslate
-        },
-      ]
-    );
-  };
-
   return (
     <ThemedView variant="screen" className="flex-1">
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <ThemedView className="p-6 pt-16">
           {/* Header */}
           <ThemedText variant="title" className="mb-2">
@@ -85,21 +106,33 @@ export default function SettingsScreen() {
                   Traducir al Español
                 </ThemedText>
                 <ThemedText variant="caption" color="secondary">
-                  Traduce títulos y descripciones automáticamente
+                  {translationsEnabled 
+                    ? 'Productos en español' 
+                    : 'Productos en inglés'
+                  }
                 </ThemedText>
               </View>
               <Switch
                 value={translationsEnabled}
-                onValueChange={toggleTranslations}
+                onValueChange={handleToggle}
                 disabled={translating}
+                trackColor={{ 
+                  false: isDark ? '#4B5563' : '#D1D5DB',
+                  true: '#10B981' 
+                }}
+                thumbColor={translationsEnabled ? '#FFFFFF' : '#F3F4F6'}
+                ios_backgroundColor={isDark ? '#4B5563' : '#D1D5DB'}
               />
             </View>
 
             {translating && (
-              <View className="flex-row items-center py-2">
-                <ActivityIndicator size="small" />
-                <ThemedText variant="caption" color="secondary" className="ml-2">
-                  Traduciendo productos...
+              <View className="flex-row items-center py-2 px-3 bg-blue-100 rounded-lg">
+                <ActivityIndicator size="small" color="#2563EB" />
+                <ThemedText variant="caption" className="ml-2 text-blue-700">
+                  {translationsEnabled 
+                    ? 'Traduciendo productos al español...' 
+                    : 'Cargando productos en inglés...'
+                  }
                 </ThemedText>
               </View>
             )}

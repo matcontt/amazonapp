@@ -17,7 +17,7 @@ export default function IndexScreen() {
     filteredProducts, 
     categories, 
     loading, 
-    translating, // NUEVO
+    translating,
     error, 
     selectedCategory, 
     searchQuery,
@@ -28,6 +28,7 @@ export default function IndexScreen() {
   } = useProducts();
   
   const isChristmas = theme.includes('christmas');
+  const isDark = theme.includes('dark');
 
   const totalDiscountedCount = products.filter(p => p.discount).length;
   const isShowingOffers = selectedCategory === '🔥 Ofertas';
@@ -101,11 +102,12 @@ export default function IndexScreen() {
             </ThemedView>
           )}
 
-          {/* Banner de ofertas prominente */}
+          {/* Banner de ofertas prominente - CORREGIDO */}
           {totalDiscountedCount > 0 && !isShowingOffers && (
             <ThemedView 
-              className="mt-4 p-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500"
+              className="mt-4 p-4 rounded-xl"
               style={{
+                backgroundColor: '#FF4500', // Naranja-rojo brillante
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
@@ -124,9 +126,17 @@ export default function IndexScreen() {
                 </View>
                 <TouchableOpacity
                   onPress={() => setSelectedCategory('🔥 Ofertas')}
-                  className="bg-white px-4 py-2 rounded-full"
+                  className="px-4 py-2 rounded-full"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 3,
+                  }}
                 >
-                  <ThemedText className="text-red-500 font-bold">
+                  <ThemedText className="font-bold" style={{ color: '#FF4500' }}>
                     Ver Todas →
                   </ThemedText>
                 </TouchableOpacity>
